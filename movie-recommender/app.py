@@ -5,6 +5,9 @@ import pandas as pd
 import requests
 import datetime as dt
 from datetime import datetime
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from PIL import Image
 
 
 def is_movie_in_range(release_date, start_date, end_date):
@@ -16,27 +19,23 @@ def recommend(movie, date1, date2):
     recommended_movies_posters = []
 
     # index of the provided movie
-    movie_index = movies[movies['title'] == movie].index.item()
+    given_movie_index = movies[movies['title'] == movie].index.item()
 
-    # distance of provided movie with all movies
-    distances = list(similarity[movie_index])
-    movies_distance_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:]
-    st.write(movies_distance_list)
+    movies['release_date'] = movies.apply(
+        lambda x: x['release_date'] if is_movie_in_range(x['release_date'], date1, date2) else None, axis=1)
+    movies_in_range = movies[movies['release_date'].notna()]
 
-    movies_in_range = movies.apply(
-        lambda x: x if is_movie_in_range(x['release_date'], date1, date2) else None, axis=1)
+    cv = CountVectorizer(max_features=5000, stop_words='english')
+    vectors = cv.fit_transform(movies_in_range['tags']).toarray()
 
-    filtered_movies_in_range = list(movies_in_range.dropna())
+    cosine_similarity(vectors)
+    similarity = cosine_similarity(vectors)
+    silmilarmovies = sorted(list(enumerate(similarity[given_movie_index])), reverse=True, key=lambda x: x[1])[1:]
 
-    st.write(filtered_movies_in_range)
-
-    for i in range(len(movies_distance_list)):
-        for j in range(len(filtered_movies_in_range)):
-            if movies_distance_list[i][0] == filtered_movies_in_range[j]['id']:
-                recommended_movies.append(movies_in_range[i])
-    st.write(recommended_movies)
-    for i in range(len(recommended_movies)):
+    for i in range(0, 5):
+        recommended_movies.append(movies_in_range.iloc[silmilarmovies[i][0]])
         recommended_movies_posters.append(fetch_poster_link(recommended_movies[i]['id']))
+
     return recommended_movies, recommended_movies_posters
 
 
@@ -54,7 +53,6 @@ def fetch_poster_link(movie_id):
 movies_dict = pickle.load(open('movies_dict.pkl', 'rb'))
 movies = pd.DataFrame(movies_dict)
 movies['release_date'] = pd.to_datetime(movies['release_date'])
-similarity = pickle.load(open('similarity.pkl', 'rb'))
 
 st.title('Which movie next?')
 selected_movie_name = st.selectbox("Select a movie", movies['title'].values)
@@ -63,7 +61,8 @@ dcol1, dcol2 = st.columns(2)
 with dcol1:
     d1 = st.date_input(
         "From",
-        dt.date(2016, 1, 1))
+        dt.date(2016, 1, 1),
+        min_value=dt.date(1950, 1, 1))
 with dcol2:
     d2 = st.date_input(
         "To",
@@ -78,24 +77,34 @@ if st.button("Submit"):
         if len(recommendations) == 0:
             st.write('Unable to find recommendation within the provided date range!')
         else:
-            col1, col2, col3, col4, col5 = st.tabs(['1', '2', '3', '4', '5'])
+            col1, col2, col3, col4, col5 = st.tabs([recommendations[0].title, recommendations[1].title, recommendations[2].title, recommendations[3].title, recommendations[4].title])
             with col1:
-                st.write(recommendations[0].title)
-                st.write('Release Date - ' + str(recommendations[0].release_date)[:-9])
-                st.image(posters[0])
+                st.markdown("<h3 style='text-align: center'>" + recommendations[0].title + "</h3>",
+                            unsafe_allow_html=True)
+                st.markdown("<p style='text-align: center'>Release Date - " + str(recommendations[0].release_date)[
+                                                                              :-9] + "</p>", unsafe_allow_html=True)
+                st.image(posters[0], use_column_width="always")
             with col2:
-                st.write(recommendations[1].title)
-                st.write('Release Date - ' + str(recommendations[1].release_date)[:-9])
-                st.image(posters[1])
+                st.markdown("<h3 style='text-align: center'>" + recommendations[1].title + "</h3>",
+                            unsafe_allow_html=True)
+                st.markdown("<p style='text-align: center'>Release Date - " + str(recommendations[1].release_date)[
+                                                                              :-9] + "</p>", unsafe_allow_html=True)
+                st.image(posters[1], use_column_width="always")
             with col3:
-                st.write(recommendations[2].title)
-                st.write('Release Date - ' + str(recommendations[2].release_date)[:-9])
-                st.image(posters[2])
+                st.markdown("<h3 style='text-align: center'>" + recommendations[2].title + "</h3>",
+                            unsafe_allow_html=True)
+                st.markdown("<p style='text-align: center'>Release Date - " + str(recommendations[2].release_date)[
+                                                                              :-9] + "</p>", unsafe_allow_html=True)
+                st.image(posters[2], use_column_width="always")
             with col4:
-                st.write(recommendations[3].title)
-                st.write('Release Date - ' + str(recommendations[3].release_date)[:-9])
-                st.image(posters[3])
+                st.markdown("<h3 style='text-align: center'>" + recommendations[3].title + "</h3>",
+                            unsafe_allow_html=True)
+                st.markdown("<p style='text-align: center'>Release Date - " + str(recommendations[3].release_date)[
+                                                                              :-9] + "</p>", unsafe_allow_html=True)
+                st.image(posters[3], use_column_width="always")
             with col5:
-                st.write(recommendations[4].title)
-                st.write('Release Date - ' + str(recommendations[4].release_date)[:-9])
-                st.image(posters[4])
+                st.markdown("<h3 style='text-align: center'>" + recommendations[4].title + "</h3>",
+                            unsafe_allow_html=True)
+                st.markdown("<p style='text-align: center'>Release Date - " + str(recommendations[4].release_date)[
+                                                                              :-9] + "</p>", unsafe_allow_html=True)
+                st.image(posters[4], use_column_width="always")
