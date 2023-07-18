@@ -1,13 +1,11 @@
 import streamlit as st
 import pickle
-import math
 import pandas as pd
 import requests
 import datetime as dt
 from datetime import datetime
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from PIL import Image
 
 
 def is_movie_in_range(release_date, start_date, end_date):
