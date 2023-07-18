@@ -53,7 +53,7 @@ movies = pd.DataFrame(movies_dict)
 movies['release_date'] = pd.to_datetime(movies['release_date'])
 
 st.title('Which movie next?')
-selected_movie_name = st.selectbox("Select a movie", movies['title'].values)
+selected_movie_name = st.selectbox("Select a movie you like", movies['title'].values)
 st.write('Release Date')
 dcol1, dcol2 = st.columns(2)
 with dcol1:
